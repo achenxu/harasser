@@ -1,0 +1,98 @@
+#! /usr/bin/env node
+
+var cli = require('cli')
+var async = require('async')
+var request = require('request')
+var _ = require('lodash')
+var pkg = require('./package.json')
+var EXIT_CONDITION = false
+cli.enable('help', 'version', 'status')
+cli.setApp('harass', pkg.version)
+var iterOpts = [ 'i', 'number of iterations', 'number' ]
+var bandwidthOpts = [ 'b', 'number of calls to run simultaneously', 'number', '10' ]
+var repeatOpts = [ 'r', 'time (ms) between repeating call', 'number', '1000' ]
+var typeOpts = [ 't', 'types of HTTP calls to send, comma-dilineated', 'string', 'post,get,put,patch,delete,head' ]
+var options = cli.parse({
+  iterations: iterOpts,
+  bandwidth: bandwidthOpts,
+  repeat: repeatOpts,
+  types: typeOpts
+})
+var iterations = 0
+cli.main(function (args, options) {
+  urlToCall = args[0] || 'http://localhost:8000'
+  options.urlToCall = urlToCall
+  console.log(options.types)
+  options.types = options.types.split(',')
+  console.log(options.types)
+  options.types = options.types.map(function (type) {
+    type = type.trim().toLowerCase()
+    // if (type === 'delete'){
+    //   type = 'del'
+    // }
+    return type
+  })
+  console.log(options.types)
+  runCalls(options)
+})
+function sleep (milliseconds) {
+  var start = new Date().getTime()
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds) {
+      break
+    }
+  }
+}
+function runCalls (options) {
+  var callsArray = []
+  for (var i = 0; i < options.bandwidth; i++) {
+    var callFunction = new Promise(function (resolve, reject) {
+      var randomIndex = getRandom(0, options.types.length)
+      var randomMethod = options.types[randomIndex]
+      var method = randomMethod.toUpperCase()
+      console.log('requesting', method, options.urlToCall)
+      opts = {
+        method: method,
+        url: options.urlToCall,
+        headers: {
+          'Host': 'mockbin.com'
+        }
+      }
+      if(method !== 'GET' && method !== 'DELETE'){
+        opts.formData = formData = {
+          my_field: 'my_value1',
+          my_field1: 'my_value2',
+          my_field2: 'my_value3',
+          my_field3: 'my_value4',
+          my_field4: 'my_value5',
+          my_buffer: new Buffer([1, 2, 3])
+        }
+      }
+      request(opts, function (err, results) {
+        console.log(method, options.urlToCall, new Date())
+        resolve()
+      })
+    })
+    callsArray.push(callFunction)
+  }
+  Promise.all(callsArray).then(function (results) {
+    iterations++
+    console.log('finished iteration', iterations)
+    sleep(options.repeat)
+    if(options.iterations){
+      if(iterations < options.iterations){
+        runCalls(options)
+      } else{
+        EXIT_CONDITION = true
+      }
+    } else {
+      runCalls(options)
+    }
+  })
+}
+function getRandom (min, max) {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+(function wait () {
+   if (!EXIT_CONDITION) setTimeout(wait, 1000);
+})();

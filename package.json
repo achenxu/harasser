@@ -1,0 +1,20 @@
+{
+  "name": "harasser",
+  "version": "1.0.0",
+  "description": "Send repeated http requests, even indefinitely, if you like. I hereby wash my hands of what you do with this.",
+  "main": "harasser",
+  "bin":{
+    "harass":"./harasser"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Trent Oswald <trentoswald@therebelrobot.com> (@therebelrobot)",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^1.4.2",
+    "cli": "^0.11.0",
+    "lodash": "^3.10.1",
+    "request": "^2.65.0"
+  }
+}
