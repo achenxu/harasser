@@ -28,9 +28,9 @@ Options:
 
 Repeat is the number of milliseconds it waits **after the last call completed**. This won't stack up calls on top of each other if the requests are taking forever. That means, if you set the `--repeat` param to 1500 ms, and the calls take 2000 ms to complete, there will be 3500 ms between the start of each call. I wanted to make sure the previous calls went through before stacking more on. Ends up being pretty snappy most of the time.
 
-### `sleep()`?
+### `sleep()` vs `setInterval`
 
-The original script this was built out of was using `setInterval` and/or `setTimeout`, both of which, for some reason on my system, stopped working after a couple hundred iterations. This synchronous call checks the milliseconds of the current `Date()` object before continuing. All the tests I've done with this method seem to be working quite nicely for me, tested over 10k iterations with no signs of stopping. If you have another method that works better, please let me know.
+The original script this was built out of was using `setInterval` and/or `setTimeout`, both of which, for some reason on my system, stopped working after a couple hundred iterations. *I still have no idea why it does that. If you know, please shoot me a message*. The synchronous `sleep()` call checks the milliseconds of the current `Date()` object before continuing. All the tests I've done with this method seem to be working quite nicely for me, tested over 10k iterations with no signs of stopping. If you have another method that works better, please let me know.
 
 ## Why?
 
