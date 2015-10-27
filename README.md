@@ -34,5 +34,5 @@ The original script this was built out of was using `setInterval` and/or `setTim
 
 ## Why?
 
-I needed a way to test a large number of requests into [Kong](https://getkong.org/) for testing of the [Galileo](http://apianalytics.com/) platform (for which I built the frontend). This cli did the ticket.
+I needed a way to test a large number of requests into [Kong](https://getkong.org/) for testing the [Galileo](http://apianalytics.com/) platform (for which I built the frontend). This cli did the ticket.
 
