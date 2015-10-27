@@ -30,4 +30,4 @@ I needed a way to test a large number of requests into [Kong](https://getkong.or
 
 ### `sleep()`?
 
-The original script this was built out of was using `setInterval` and/or `setTimeout`, both of which, for some reason on my system, stopped working after a couple hundred iterations. This synchronous call checks the milliseconds of the current `Date()` object before continuing. All the tests I've done with this method seem to be working quite nicely for me. If you have another method that works better, please let me know.
+The original script this was built out of was using `setInterval` and/or `setTimeout`, both of which, for some reason on my system, stopped working after a couple hundred iterations. This synchronous call checks the milliseconds of the current `Date()` object before continuing. All the tests I've done with this method seem to be working quite nicely for me, tested over 10k iterations with no signs of stopping. If you have another method that works better, please let me know.
