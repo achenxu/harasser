@@ -13,7 +13,7 @@ var iterOpts = [ 'i', 'number of iterations', 'number' ]
 var bandwidthOpts = [ 'b', 'number of calls to run simultaneously', 'number', '10' ]
 var repeatOpts = [ 'r', 'time (ms) between repeating call', 'number', '1000' ]
 var headersOpts = [ 'h', 'headers, comma delineated', 'string', 'Host:httpbin.org' ]
-var fixturesOpts = [ 'f', 'include fixtures with appropriate calls, randomly assigned', 'boolean', 'true' ]
+var fixturesOpts = [ 'f', 'include fixtures with appropriate calls, randomly assigned', 'boolean', true ]
 var typeOpts = [ 't', 'types of HTTP calls to send, comma-dilineated', 'string', 'post,get,put,patch,delete' ]
 var options = cli.parse({
   iterations: iterOpts,
@@ -89,6 +89,7 @@ function runCalls (options) {
         }
       }
       var bodyAccepted = (method !== 'GET' && method !== 'DELETE' && method !== 'HEAD')
+      var fileStream = false
       if (bodyAccepted) {
         var randomNumber = getRandom(0, 10)
         if (randomNumber < 5) {
@@ -116,18 +117,22 @@ function runCalls (options) {
             }
           ]
         } else {
-          opts.har.postData.mimeType = 'text/plain'
-          opts.har.postData.text = opts.body = 'This is a test of the plain text post data'
-          var newRandomNumber = getRandom(0, 10)
-          if (newRandomNumber < 5) {
-            console.log('base64ing')
-            opts.har.postData.text = opts.body = utf8_to_b64(opts.har.postData.text)
-          }
+          fileStream = true
+          delete opts.har
         }
       }
       if(bodyAccepted && fileStream){
-        var fileExtension = '.gif'
-        fs.createReadStream('./fixtures/test.'+fileExtension).pipe(request.put('http://mysite.com/obj.json'))
+        var fileExtensions = ['css','csv','gif','html','ico','jpg','js','json','md','png','svg','txt','xml','yml']
+        var fileExtension = fileExtensions[getRandom(0,fileExtensions.length-1)]
+        var file = fs.createReadStream('./fixtures/test.'+fileExtension)
+        file.pipe(request(opts))
+        var buffer = ''
+        file.on('data', function(chunk){
+          buffer += chunk
+        })
+        file.on('end', function(){
+          resolve(buffer)
+        })
       } else{
         request(opts, function (err, results) {
           if(err){
