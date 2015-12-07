@@ -27,9 +27,7 @@ var iterations = 0
 cli.main(function (args, options) {
   urlToCall = args[0] || 'http://localhost:8000'
   options.urlToCall = urlToCall
-  console.log(options.types)
   options.types = options.types.split(',')
-  console.log(options.types)
   options.types = options.types.map(function (type) {
     type = type.trim().toLowerCase()
     // if (type === 'delete'){
@@ -37,7 +35,6 @@ cli.main(function (args, options) {
     // }
     return type
   })
-  console.log(options.types)
   if(options.headers.indexOf(',')>-1){
     options.headers = options.headers.split(',')
   } else {
@@ -50,9 +47,8 @@ cli.main(function (args, options) {
       value:header[1].trim()
     }
   })
-  console.log(options.headers)
   // process.exit()
-  // runCalls(options)
+  runCalls(options)
 })
 function sleep (milliseconds) {
   var start = new Date().getTime()
@@ -137,6 +133,7 @@ function runCalls (options) {
         request(opts, function (err, results) {
           if(err){
             console.error(err)
+            process.exit()
           }
           console.log(method, options.fakehost, options.urlToCall+'/'+randomMethod, new Date())
           resolve(results)
