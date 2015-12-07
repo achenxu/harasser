@@ -12,27 +12,26 @@ cli.setApp('harass', pkg.version)
 var iterOpts = [ 'i', 'number of iterations', 'number' ]
 var bandwidthOpts = [ 'b', 'number of calls to run simultaneously', 'number', '10' ]
 var repeatOpts = [ 'r', 'time (ms) between repeating call', 'number', '1000' ]
+var methodUrlOpts = [ 'mu', 'append method to url to call', 'boolean', true ]
 var headersOpts = [ 'h', 'headers, comma delineated', 'string', 'Host:httpbin.org' ]
-var fixturesOpts = [ 'f', 'include fixtures with appropriate calls, randomly assigned', 'boolean', true ]
-var typeOpts = [ 't', 'types of HTTP calls to send, comma-dilineated', 'string', 'post,get,put,patch,delete' ]
+// var fixturesOpts = [ 'f', 'include fixtures with appropriate calls, randomly assigned', 'boolean', true ]
+var methodOpts = [ 'm', 'methods of HTTP calls to send, comma-delineated', 'string', 'post,get,put,patch,delete' ]
 var options = cli.parse({
   iterations: iterOpts,
   bandwidth: bandwidthOpts,
   repeat: repeatOpts,
-  types: typeOpts,
-  headers: headersOpts,
-  fixures: fixturesOpts
+  methods: methodOpts,
+  methodurl: methodUrlOpts,
+  headers: headersOpts
+  // fixures: fixturesOpts
 })
 var iterations = 0
 cli.main(function (args, options) {
   urlToCall = args[0] || 'http://localhost:8000'
   options.urlToCall = urlToCall
-  options.types = options.types.split(',')
-  options.types = options.types.map(function (type) {
+  options.methods = options.methods.split(',')
+  options.methods = options.methods.map(function (type) {
     type = type.trim().toLowerCase()
-    // if (type === 'delete'){
-    //   type = 'del'
-    // }
     return type
   })
   if (options.headers.indexOf(',') > -1) {
@@ -62,20 +61,24 @@ function runCalls (options) {
   var callsArray = []
   for (var i = 0; i < options.bandwidth; i++) {
     var callFunction = new Promise(function (resolve, reject) {
-      var randomIndex = getRandom(0, options.types.length)
-      var randomMethod = options.types[randomIndex]
+      var randomIndex = getRandom(0, options.methods.length)
+      var randomMethod = options.methods[randomIndex]
       var method = randomMethod.toUpperCase()
       var requestHeaders = {}
       _.forEach(options.headers, function (header) {
         requestHeaders[header.name] = header.value
       })
-      console.log('requesting', method, options.urlToCall)
+      var urlToCall = options.urlToCall
+      if(options.methodurl){
+        urlToCall = options.urlToCall + '/' + randomMethod
+      }
+      console.log('requesting', method, urlToCall)
       opts = {
         method: method,
-        url: options.urlToCall + '/' + randomMethod,
+        url: urlToCall,
         headers: requestHeaders,
         har: {
-          url: options.urlToCall + '/' + randomMethod,
+          url: urlToCall,
           method: method,
           headers: options.headers,
           postData: {
@@ -87,8 +90,8 @@ function runCalls (options) {
       var bodyAccepted = (method !== 'GET' && method !== 'DELETE' && method !== 'HEAD')
       var fileStream = false
       if (bodyAccepted) {
-        var randomNumber = getRandom(0, 10)
-        if (randomNumber < 5) {
+        var randomNumber = getRandom(0, 8)
+        if (randomNumber < 3) {
           opts.har.postData.mimeType = 'application/x-www-form-urlencoded'
           opts.har.postData.params = [
             {
@@ -135,7 +138,7 @@ function runCalls (options) {
             console.error(err)
             process.exit()
           }
-          console.log(method, options.fakehost, options.urlToCall + '/' + randomMethod, new Date())
+          console.log(method, urlToCall, new Date())
           resolve(results)
         })
       }
