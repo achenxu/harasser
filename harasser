@@ -23,7 +23,7 @@ var options = cli.parse({
   methods: methodOpts,
   methodurl: methodUrlOpts,
   headers: headersOpts
-  // fixures: fixturesOpts
+// fixures: fixturesOpts
 })
 var iterations = 0
 cli.main(function (args, options) {
@@ -69,7 +69,7 @@ function runCalls (options) {
         requestHeaders[header.name] = header.value
       })
       var urlToCall = options.urlToCall
-      if(options.methodurl){
+      if (options.methodurl) {
         urlToCall = options.urlToCall + '/' + randomMethod
       }
       console.log('requesting', method, urlToCall)
@@ -123,23 +123,47 @@ function runCalls (options) {
         }
       }
       if (bodyAccepted && fileStream) {
-        var fileExtensions = ['css', 'csv', 'gif', 'html', 'ico', 'jpg', 'js', 'json', 'md', 'png', 'svg', 'txt', 'xml', 'yml']
-        var fileExtension = fileExtensions[getRandom(0, fileExtensions.length - 1)]
-        opts.headers['X-Filetype'] = fileExtension
-        var file = fs.createReadStream(__dirname + '/fixtures/test.' + fileExtension)
+        var fileTypes = [
+          {mimeType: 'text/css', extension: 'css'},
+          {mimeType: 'text/csv', extension: 'csv'},
+          {mimeType: 'image/gif', extension: 'gif'},
+          {mimeType: 'text/html', extension: 'html'},
+          {mimeType: 'image/x-icon', extension: 'ico'},
+          {mimeType: 'image/jpeg', extension: 'jpg'},
+          {mimeType: ['text/javascript', 'application/javascript', 'text/ecmascript', 'application/ecmascript', 'application/x-javascript'], extension: 'js'},
+          {mimeType: 'applicaton/json', extension: 'json'},
+          {mimeType: 'text/x-markdown', extension: 'md'},
+          {mimeType: ['image/png', 'application/png', 'application/x-png'], extension: 'png'},
+          {mimeType: 'image/svg+xml', extension: 'svg'},
+          {mimeType: 'text/plain', extension: 'txt'},
+          {mimeType: 'text/xml', extension: 'xml'},
+          {mimeType: ['text/yaml', 'application/x-yaml'], extension: 'yml'}
+        ]
+        var fileType = fileTypes[getRandom(0, fileTypes.length - 1)]
+        if (_.isArray(fileType.mimeType)) {
+          fileType.mimeType = fileType.mimeType[getRandom(0, fileType.mimeType.length - 1)]
+        }
+        opts.headers['X-Filetype'] = fileType.extension
+        opts.headers['Content-Type'] = fileType.mimeType
+        var file = fs.createReadStream(__dirname + '/fixtures/test.' + fileType.extension)
         file.pipe(request(opts))
         var buffer = ''
         file.on('data', function (chunk) {
           buffer += chunk
         })
+        file.on('error', function (chunk) {
+          console.error(err)
+          resolve(results)
+        })
         file.on('end', function () {
+          console.log(method, urlToCall, new Date())
           resolve(buffer)
         })
       } else {
         request(opts, function (err, results) {
           if (err) {
             console.error(err)
-            process.exit()
+          // process.exit()
           }
           console.log(method, urlToCall, new Date())
           resolve(results)
