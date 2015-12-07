@@ -35,16 +35,16 @@ cli.main(function (args, options) {
     // }
     return type
   })
-  if(options.headers.indexOf(',')>-1){
+  if (options.headers.indexOf(',') > -1) {
     options.headers = options.headers.split(',')
   } else {
     options.headers = [options.headers]
   }
-  options.headers = _.map(options.headers, function(header){
+  options.headers = _.map(options.headers, function (header) {
     header = header.split(':')
     return {
-      name:header[0].trim(),
-      value:header[1].trim()
+      name: header[0].trim(),
+      value: header[1].trim()
     }
   })
   // process.exit()
@@ -66,16 +66,16 @@ function runCalls (options) {
       var randomMethod = options.types[randomIndex]
       var method = randomMethod.toUpperCase()
       var requestHeaders = {}
-      _.forEach(options.headers, function(header){
+      _.forEach(options.headers, function (header) {
         requestHeaders[header.name] = header.value
       })
       console.log('requesting', method, options.urlToCall)
       opts = {
         method: method,
-        url: options.urlToCall+'/'+randomMethod,
+        url: options.urlToCall + '/' + randomMethod,
         headers: requestHeaders,
         har: {
-          url: options.urlToCall+'/'+randomMethod,
+          url: options.urlToCall + '/' + randomMethod,
           method: method,
           headers: options.headers,
           postData: {
@@ -117,25 +117,25 @@ function runCalls (options) {
           delete opts.har
         }
       }
-      if(bodyAccepted && fileStream){
-        var fileExtensions = ['css','csv','gif','html','ico','jpg','js','json','md','png','svg','txt','xml','yml']
-        var fileExtension = fileExtensions[getRandom(0,fileExtensions.length-1)]
-        var file = fs.createReadStream('./fixtures/test.'+fileExtension)
+      if (bodyAccepted && fileStream) {
+        var fileExtensions = ['css', 'csv', 'gif', 'html', 'ico', 'jpg', 'js', 'json', 'md', 'png', 'svg', 'txt', 'xml', 'yml']
+        var fileExtension = fileExtensions[getRandom(0, fileExtensions.length - 1)]
+        var file = fs.createReadStream(__dirname + '/fixtures/test.' + fileExtension)
         file.pipe(request(opts))
         var buffer = ''
-        file.on('data', function(chunk){
+        file.on('data', function (chunk) {
           buffer += chunk
         })
-        file.on('end', function(){
+        file.on('end', function () {
           resolve(buffer)
         })
-      } else{
+      } else {
         request(opts, function (err, results) {
-          if(err){
+          if (err) {
             console.error(err)
             process.exit()
           }
-          console.log(method, options.fakehost, options.urlToCall+'/'+randomMethod, new Date())
+          console.log(method, options.fakehost, options.urlToCall + '/' + randomMethod, new Date())
           resolve(results)
         })
       }
@@ -155,7 +155,7 @@ function runCalls (options) {
     } else {
       runCalls(options)
     }
-  }).catch(function(error){
+  }).catch(function (error) {
     console.error(error)
     process.exit()
   })
