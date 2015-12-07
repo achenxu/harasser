@@ -2,6 +2,7 @@
 
 var cli = require('cli')
 var async = require('async')
+var fs = require('fs')
 var request = require('request')
 var _ = require('lodash')
 var pkg = require('./package.json')
@@ -11,12 +12,16 @@ cli.setApp('harass', pkg.version)
 var iterOpts = [ 'i', 'number of iterations', 'number' ]
 var bandwidthOpts = [ 'b', 'number of calls to run simultaneously', 'number', '10' ]
 var repeatOpts = [ 'r', 'time (ms) between repeating call', 'number', '1000' ]
-var typeOpts = [ 't', 'types of HTTP calls to send, comma-dilineated', 'string', 'post,get,put,patch,delete,head' ]
+var headersOpts = [ 'h', 'headers, comma delineated', 'string', 'Host:httpbin.org' ]
+var fixturesOpts = [ 'f', 'include fixtures with appropriate calls, randomly assigned', 'boolean', 'true' ]
+var typeOpts = [ 't', 'types of HTTP calls to send, comma-dilineated', 'string', 'post,get,put,patch,delete' ]
 var options = cli.parse({
   iterations: iterOpts,
   bandwidth: bandwidthOpts,
   repeat: repeatOpts,
-  types: typeOpts
+  types: typeOpts,
+  headers: headersOpts,
+  fixures: fixturesOpts
 })
 var iterations = 0
 cli.main(function (args, options) {
@@ -33,7 +38,21 @@ cli.main(function (args, options) {
     return type
   })
   console.log(options.types)
-  runCalls(options)
+  if(options.headers.indexOf(',')>-1){
+    options.headers = options.headers.split(',')
+  } else {
+    options.headers = [options.headers]
+  }
+  options.headers = _.map(options.headers, function(header){
+    header = header.split(':')
+    return {
+      name:header[0].trim(),
+      value:header[1].trim()
+    }
+  })
+  console.log(options.headers)
+  // process.exit()
+  // runCalls(options)
 })
 function sleep (milliseconds) {
   var start = new Date().getTime()
@@ -50,28 +69,74 @@ function runCalls (options) {
       var randomIndex = getRandom(0, options.types.length)
       var randomMethod = options.types[randomIndex]
       var method = randomMethod.toUpperCase()
+      var requestHeaders = {}
+      _.forEach(options.headers, function(header){
+        requestHeaders[header.name] = header.value
+      })
       console.log('requesting', method, options.urlToCall)
       opts = {
         method: method,
-        url: options.urlToCall,
-        headers: {
-          'Host': 'mockbin.com'
+        url: options.urlToCall+'/'+randomMethod,
+        headers: requestHeaders,
+        har: {
+          url: options.urlToCall+'/'+randomMethod,
+          method: method,
+          headers: options.headers,
+          postData: {
+            mimeType: '',
+            params: []
+          }
         }
       }
-      if(method !== 'GET' && method !== 'DELETE'){
-        opts.formData = formData = {
-          my_field: 'my_value1',
-          my_field1: 'my_value2',
-          my_field2: 'my_value3',
-          my_field3: 'my_value4',
-          my_field4: 'my_value5',
-          my_buffer: new Buffer([1, 2, 3])
+      var bodyAccepted = (method !== 'GET' && method !== 'DELETE' && method !== 'HEAD')
+      if (bodyAccepted) {
+        var randomNumber = getRandom(0, 10)
+        if (randomNumber < 5) {
+          opts.har.postData.mimeType = 'application/x-www-form-urlencoded'
+          opts.har.postData.params = [
+            {
+              name: 'my_field',
+              value: 'my_value'
+            },
+            {
+              name: 'my_field1',
+              value: 'my_value1'
+            },
+            {
+              name: 'my_field2',
+              value: 'my_value2'
+            },
+            {
+              name: 'my_field3',
+              value: 'my_value3'
+            },
+            {
+              name: 'my_field4',
+              value: 'my_value4'
+            }
+          ]
+        } else {
+          opts.har.postData.mimeType = 'text/plain'
+          opts.har.postData.text = opts.body = 'This is a test of the plain text post data'
+          var newRandomNumber = getRandom(0, 10)
+          if (newRandomNumber < 5) {
+            console.log('base64ing')
+            opts.har.postData.text = opts.body = utf8_to_b64(opts.har.postData.text)
+          }
         }
       }
-      request(opts, function (err, results) {
-        console.log(method, options.urlToCall, new Date())
-        resolve()
-      })
+      if(bodyAccepted && fileStream){
+        var fileExtension = '.gif'
+        fs.createReadStream('./fixtures/test.'+fileExtension).pipe(request.put('http://mysite.com/obj.json'))
+      } else{
+        request(opts, function (err, results) {
+          if(err){
+            console.error(err)
+          }
+          console.log(method, options.fakehost, options.urlToCall+'/'+randomMethod, new Date())
+          resolve(results)
+        })
+      }
     })
     callsArray.push(callFunction)
   }
@@ -79,20 +144,26 @@ function runCalls (options) {
     iterations++
     console.log('finished iteration', iterations)
     sleep(options.repeat)
-    if(options.iterations){
-      if(iterations < options.iterations){
+    if (options.iterations) {
+      if (iterations < options.iterations) {
         runCalls(options)
-      } else{
+      } else {
         EXIT_CONDITION = true
       }
     } else {
       runCalls(options)
     }
+  }).catch(function(error){
+    console.error(error)
+    process.exit()
   })
 }
 function getRandom (min, max) {
   return Math.floor(Math.random() * (max - min) + min)
 }
+function utf8_to_b64 (str) {
+  return new Buffer(str).toString('base64')
+}
 (function wait () {
-   if (!EXIT_CONDITION) setTimeout(wait, 1000);
-})();
+  if (!EXIT_CONDITION) setTimeout(wait, 1000)
+})()
