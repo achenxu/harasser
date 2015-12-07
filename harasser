@@ -92,6 +92,8 @@ function runCalls (options) {
       if (bodyAccepted) {
         var randomNumber = getRandom(0, 8)
         if (randomNumber < 3) {
+          opts.headers['X-Filetype'] = 'Form Data'
+          opts.har.headers.push({ name: 'X-Filetype', value: 'Form Data' })
           opts.har.postData.mimeType = 'application/x-www-form-urlencoded'
           opts.har.postData.params = [
             {
@@ -123,6 +125,7 @@ function runCalls (options) {
       if (bodyAccepted && fileStream) {
         var fileExtensions = ['css', 'csv', 'gif', 'html', 'ico', 'jpg', 'js', 'json', 'md', 'png', 'svg', 'txt', 'xml', 'yml']
         var fileExtension = fileExtensions[getRandom(0, fileExtensions.length - 1)]
+        opts.headers['X-Filetype'] = fileExtension
         var file = fs.createReadStream(__dirname + '/fixtures/test.' + fileExtension)
         file.pipe(request(opts))
         var buffer = ''
