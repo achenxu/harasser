@@ -139,9 +139,9 @@ function runCalls (options) {
           {mimeType: 'text/xml', extension: 'xml'},
           {mimeType: ['text/yaml', 'application/x-yaml'], extension: 'yml'}
         ]
-        var fileType = fileTypes[getRandom(0, fileTypes.length - 1)]
+        var fileType = fileTypes[getRandom(0, fileTypes.length)]
         if (_.isArray(fileType.mimeType)) {
-          fileType.mimeType = fileType.mimeType[getRandom(0, fileType.mimeType.length - 1)]
+          fileType.mimeType = fileType.mimeType[getRandom(0, fileType.mimeType.length)]
         }
         opts.headers['X-Filetype'] = fileType.extension
         opts.headers['Content-Type'] = fileType.mimeType
