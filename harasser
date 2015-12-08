@@ -131,7 +131,7 @@ function runCalls (options) {
           {mimeType: 'image/x-icon', extension: 'ico'},
           {mimeType: 'image/jpeg', extension: 'jpg'},
           {mimeType: ['text/javascript', 'application/javascript', 'text/ecmascript', 'application/ecmascript', 'application/x-javascript'], extension: 'js'},
-          {mimeType: 'applicaton/json', extension: 'json'},
+          {mimeType: 'application/json', extension: 'json'},
           {mimeType: 'text/x-markdown', extension: 'md'},
           {mimeType: ['image/png', 'application/png', 'application/x-png'], extension: 'png'},
           {mimeType: 'image/svg+xml', extension: 'svg'},

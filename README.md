@@ -17,11 +17,12 @@ Options:
   -i, --iterations NUMBERnumber of iterations
   -b, --bandwidth [NUMBER]number of calls to run simultaneously (Default is 10)
   -r, --repeat [NUMBER]  time (ms) between repeating call (Default is 1000)
-  -t, --types [STRING]   types of HTTP calls to send, comma-dilineated (Default is post,get,put,patch,delete,head)
+  -m, --methods [STRING] methods of HTTP calls to send, comma-delineated  (Default is post,get,put,patch,delete)
+  -mu, --methodurl [BOOLEAN]append method to url to call (Default is true)
+  -h, --headers [STRING] headers, comma delineated (Default is Host:httpbin.org)
   -k, --no-color         Omit color from output
       --debug            Show debug information
   -v, --version          Display the current version
-  -h, --help             Display help and usage details
 ```
 
 ### `--repeat`
@@ -38,7 +39,7 @@ I needed a way to test a large number of requests into [Kong](https://getkong.or
 
 ## Licenses
 
-This application is released under [ISC](https://tldrlegal.com/license/-isc-license) licencing.
+This application is released under [ISC](https://tldrlegal.com/license/-isc-license) licensing.
 
 The images included with this application are released under their corresponding license:
 
