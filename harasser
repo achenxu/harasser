@@ -12,18 +12,20 @@ cli.setApp('harass', pkg.version)
 var iterOpts = [ 'i', 'number of iterations', 'number' ]
 var bandwidthOpts = [ 'b', 'number of calls to run simultaneously', 'number', '10' ]
 var repeatOpts = [ 'r', 'time (ms) between repeating call', 'number', '1000' ]
-var methodUrlOpts = [ 'mu', 'append method to url to call', 'boolean', true ]
+var methodUrlOpts = [ 'a', 'append method to url to call', 'boolean', false ]
 var headersOpts = [ 'h', 'headers, comma delineated', 'string', 'Host:httpbin.org' ]
-// var fixturesOpts = [ 'f', 'include fixtures with appropriate calls, randomly assigned', 'boolean', true ]
+var includeFormOpts = [ 'f', 'include calls with application/x-form-urlencoded bodies', 'boolean', false]
+var fileTypesOpts = [ 't', 'which filetypes to send in calls, randomly assigned', 'string', 'css,csv,gif,html,ico,jpg,js,json,md,png,svg,txt,xml,yml' ]
 var methodOpts = [ 'm', 'methods of HTTP calls to send, comma-delineated', 'string', 'post,get,put,patch,delete' ]
 var options = cli.parse({
   iterations: iterOpts,
   bandwidth: bandwidthOpts,
   repeat: repeatOpts,
   methods: methodOpts,
-  methodurl: methodUrlOpts,
-  headers: headersOpts
-// fixures: fixturesOpts
+  append: methodUrlOpts,
+  headers: headersOpts,
+  filetypes: fileTypesOpts,
+  includeform: includeFormOpts
 })
 var iterations = 0
 cli.main(function (args, options) {
@@ -38,6 +40,11 @@ cli.main(function (args, options) {
     options.headers = options.headers.split(',')
   } else {
     options.headers = [options.headers]
+  }
+  if (options.filetypes.indexOf(',') > -1) {
+    options.filetypes = options.filetypes.split(',')
+  } else {
+    options.filetypes = [options.filetypes]
   }
   options.headers = _.map(options.headers, function (header) {
     header = header.split(':')
@@ -69,7 +76,7 @@ function runCalls (options) {
         requestHeaders[header.name] = header.value
       })
       var urlToCall = options.urlToCall
-      if (options.methodurl) {
+      if (options.append) {
         urlToCall = options.urlToCall + '/' + randomMethod
       }
       console.log('requesting', method, urlToCall)
@@ -91,7 +98,7 @@ function runCalls (options) {
       var fileStream = false
       if (bodyAccepted) {
         var randomNumber = getRandom(0, 8)
-        if (randomNumber < 3) {
+        if (randomNumber < 3 && options.includeform) {
           opts.headers['X-Filetype'] = 'Form Data'
           opts.har.headers.push({ name: 'X-Filetype', value: 'Form Data' })
           opts.har.postData.mimeType = 'application/x-www-form-urlencoded'
@@ -123,7 +130,7 @@ function runCalls (options) {
         }
       }
       if (bodyAccepted && fileStream) {
-        var fileTypes = [
+        var allFileTypes = [
           {mimeType: 'text/css', extension: 'css'},
           {mimeType: 'text/csv', extension: 'csv'},
           {mimeType: 'image/gif', extension: 'gif'},
@@ -139,26 +146,39 @@ function runCalls (options) {
           {mimeType: 'text/xml', extension: 'xml'},
           {mimeType: ['text/yaml', 'application/x-yaml'], extension: 'yml'}
         ]
+        var fileTypes = _.map(options.filetypes, function (extension) {
+          var thisFileType = _.find(allFileTypes, {extension: extension})
+          return thisFileType
+        })
+        if (!fileTypes.length) {
+          throw new Error('No valid filetypes selected. Please try again.')
+          process.exit()
+        }
         var fileType = fileTypes[getRandom(0, fileTypes.length)]
         if (_.isArray(fileType.mimeType)) {
           fileType.mimeType = fileType.mimeType[getRandom(0, fileType.mimeType.length)]
         }
         opts.headers['X-Filetype'] = fileType.extension
         opts.headers['Content-Type'] = fileType.mimeType
-        var file = fs.createReadStream(__dirname + '/fixtures/test.' + fileType.extension)
-        file.pipe(request(opts))
-        var buffer = ''
-        file.on('data', function (chunk) {
-          buffer += chunk
-        })
-        file.on('error', function (chunk) {
+        try {
+          var file = fs.createReadStream(__dirname + '/fixtures/test.' + fileType.extension)
+          file.pipe(request(opts))
+          var buffer = ''
+          file.on('data', function (chunk) {
+            buffer += chunk
+          })
+          file.on('error', function (chunk) {
+            console.error(err)
+            resolve(err)
+          })
+          file.on('end', function () {
+            console.log(method, urlToCall, new Date())
+            resolve(buffer)
+          })
+        } catch(e) {
           console.error(err)
-          resolve(results)
-        })
-        file.on('end', function () {
-          console.log(method, urlToCall, new Date())
-          resolve(buffer)
-        })
+          resolve(err)
+        }
       } else {
         request(opts, function (err, results) {
           if (err) {

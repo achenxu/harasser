@@ -14,12 +14,15 @@ npm install -g harasser
 harass url_to_harass [options]
 
 Options:
-  -i, --iterations NUMBERnumber of iterations
-  -b, --bandwidth [NUMBER]number of calls to run simultaneously (Default is 10)
+  -i, --iterations NUMBER number of iterations
+  -b, --bandwidth [NUMBER] number of calls to run simultaneously (Default is 10)
   -r, --repeat [NUMBER]  time (ms) between repeating call (Default is 1000)
   -m, --methods [STRING] methods of HTTP calls to send, comma-delineated  (Default is post,get,put,patch,delete)
-  -mu, --methodurl [BOOLEAN]append method to url to call (Default is true)
+  -a, --append BOOLEAN   append method to url to call
   -h, --headers [STRING] headers, comma delineated (Default is Host:httpbin.org)
+  -t, --filetypes [STRING] which filetypes to send in calls, randomly assigned  
+          (Default is css,csv,gif,html,ico,jpg,js,json,md,png,svg,txt,xml,yml)
+  -f, --includeform BOOLEAN include calls with application/x-form-urlencoded bodies
   -k, --no-color         Omit color from output
       --debug            Show debug information
   -v, --version          Display the current version
