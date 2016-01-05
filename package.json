@@ -1,6 +1,6 @@
 {
   "name": "harasser",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Send repeated http requests, even indefinitely, if you like. I hereby wash my hands of what you do with this.",
   "main": "harasser",
   "bin":{
